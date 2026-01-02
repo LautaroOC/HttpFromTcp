@@ -3,6 +3,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
@@ -19,17 +20,30 @@ public class Main {
         byte[] bytes = new byte[8];
         int bytesRead;
         String text;
+        String currentLine = "";
         try(FileInputStream fileInputStream = new FileInputStream(file)) {
+
             while((bytesRead = fileInputStream.read(bytes)) != -1) {
+
                 byte[] currentRead = new byte[bytesRead];
-                System.out.println(bytesRead);
                 for (int i = 0; i < bytesRead; i++) {
-                     currentRead[i] = bytes[i];
+                    currentRead[i] = bytes[i];
                 }
                 text = new String(currentRead, StandardCharsets.UTF_8);
-                System.out.println("read :" + text);
+                
+                String[] parts = text.split("\n");
+                for (int i = 0; i < parts.length; i++) {
+                    currentLine = currentLine.concat(parts[i]);
+                    if ((parts.length != 1) && (i != parts.length -1)){
+                       System.out.println("read: " + currentLine);
+                        currentLine = "";
+                    }
+                }
             }
-
+            if (!currentLine.isEmpty()) {
+                System.out.println("read: " + currentLine);
+            }
+            
         } catch (FileNotFoundException e) {
             System.out.println("An error occurred");
             e.printStackTrace();
