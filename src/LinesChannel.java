@@ -1,7 +1,6 @@
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.BlockingQueue;
@@ -10,49 +9,76 @@ public class LinesChannel extends Thread{
 
     private File file;
     private BlockingQueue blockingQueue;
+    private int port = 42069;
+    ServerSocket serverSocket;
+    private Boolean running = false;
 
     public LinesChannel(File file, BlockingQueue blockingQueue) {
         this.file = file;
         this.blockingQueue = blockingQueue;
+        try {
+            serverSocket = new ServerSocket(port);
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void run() {
-       getLinesChannel();
+        running = true;
+        while (running) {
+            try {
+                acceptConnection();
+            }
+            catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
-    public void getLinesChannel() {
+    public void acceptConnection() throws IOException {
+        while (true) {
+            if (running) {
+                try {
+                    Socket clientSocket = serverSocket.accept();
+                    System.out.println("Connection accepted");
+                    getLinesChannel(clientSocket);
+                } catch (IOException e) {
+                    if (running) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+            else {
+                serverSocket.close();
+            }
+        }
+    }
+
+    public void getLinesChannel(Socket clientSocket) throws IOException{
         byte[] bytes = new byte[8];
         int bytesRead;
         String text;
         String currentLine = "";
-        try(FileInputStream fileInputStream = new FileInputStream(file)) {
+        InputStream in = clientSocket.getInputStream();
+        while ((bytesRead = in.read(bytes)) != -1) {
+            byte[] currentRead = new byte[bytesRead];
+            for (int i = 0; i < bytesRead; i++) {
+                currentRead[i] = bytes[i];
+            }
+            text = new String(currentRead, StandardCharsets.UTF_8);
 
-            while((bytesRead = fileInputStream.read(bytes)) != -1) {
-
-                byte[] currentRead = new byte[bytesRead];
-                for (int i = 0; i < bytesRead; i++) {
-                    currentRead[i] = bytes[i];
-                }
-                text = new String(currentRead, StandardCharsets.UTF_8);
-
-                String[] parts = text.split("\n");
-                for (int i = 0; i < parts.length; i++) {
-                    currentLine = currentLine.concat(parts[i]);
-                    if ((parts.length != 1) && (i != parts.length -1)){
-                        blockingQueue.add(currentLine);
-                        currentLine = "";
-                    }
+            String[] parts = text.split("\n");
+            for (int i = 0; i < parts.length; i++) {
+                currentLine = currentLine.concat(parts[i]);
+                if ((parts.length != 1) && (i != parts.length - 1)) {
+                    blockingQueue.add(currentLine);
+                    currentLine = "";
                 }
             }
-            if (!currentLine.isEmpty()) {
-                blockingQueue.add(currentLine);
-            }
-
-        } catch (FileNotFoundException e) {
-            System.out.println("An error occurred");
-            e.printStackTrace();
-        } catch (IOException e ) {
-            throw new RuntimeException(e);
+        }
+        if (!currentLine.isEmpty()) {
+            blockingQueue.add(currentLine);
         }
     }
 }
