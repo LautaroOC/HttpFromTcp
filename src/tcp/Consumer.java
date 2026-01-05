@@ -1,3 +1,4 @@
+package tcp;
 import java.util.concurrent.BlockingQueue;
 
 public class Consumer extends Thread {

@@ -1,3 +1,4 @@
+package tcp;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -42,7 +43,8 @@ public class LinesChannel extends Thread{
                 try {
                     Socket clientSocket = serverSocket.accept();
                     System.out.println("Connection accepted");
-                    getLinesChannel(clientSocket);
+                    InputStream in = clientSocket.getInputStream();
+                    getLinesChannel(in);
                 } catch (IOException e) {
                     if (running) {
                         throw new RuntimeException(e);
@@ -55,13 +57,12 @@ public class LinesChannel extends Thread{
         }
     }
 
-    public void getLinesChannel(Socket clientSocket) throws IOException{
+    public void getLinesChannel(InputStream inputStream) throws IOException{
         byte[] bytes = new byte[8];
         int bytesRead;
         String text;
         String currentLine = "";
-        InputStream in = clientSocket.getInputStream();
-        while ((bytesRead = in.read(bytes)) != -1) {
+        while ((bytesRead = inputStream.read(bytes)) != -1) {
             byte[] currentRead = new byte[bytesRead];
             for (int i = 0; i < bytesRead; i++) {
                 currentRead[i] = bytes[i];
