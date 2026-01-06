@@ -1,6 +1,4 @@
-package udp;
-
-import java.net.DatagramSocket;
+package dev.lauta.httpfromtcp.udp;
 
 public class MainUdp {
     public static void main(String[] args) {

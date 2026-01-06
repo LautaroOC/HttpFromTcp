@@ -1,11 +1,5 @@
-package tcp;
+package dev.lauta.httpfromtcp.tcp;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Scanner;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 
@@ -16,9 +10,9 @@ public class Main {
 
         File file = new File("src/messages.txt");
         BlockingQueue<String> blockingQueue = new LinkedBlockingDeque<>();
-        LinesChannel linesChannel = new LinesChannel(file, blockingQueue);
+        Server server = new Server(file, blockingQueue);
         Consumer consumer = new Consumer(blockingQueue);
-        linesChannel.start();
+        server.start();
         consumer.start();
 
     }

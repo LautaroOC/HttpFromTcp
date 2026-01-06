@@ -1,12 +1,11 @@
-package tcp;
+package dev.lauta.httpfromtcp.tcp;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.BlockingQueue;
 
-public class LinesChannel extends Thread{
+public class Server extends Thread{
 
     private File file;
     private BlockingQueue blockingQueue;
@@ -14,7 +13,7 @@ public class LinesChannel extends Thread{
     ServerSocket serverSocket;
     private Boolean running = false;
 
-    public LinesChannel(File file, BlockingQueue blockingQueue) {
+    public Server(File file, BlockingQueue blockingQueue) {
         this.file = file;
         this.blockingQueue = blockingQueue;
         try {

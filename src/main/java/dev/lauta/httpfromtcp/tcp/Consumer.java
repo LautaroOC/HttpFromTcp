@@ -1,4 +1,4 @@
-package tcp;
+package dev.lauta.httpfromtcp.tcp;
 import java.util.concurrent.BlockingQueue;
 
 public class Consumer extends Thread {

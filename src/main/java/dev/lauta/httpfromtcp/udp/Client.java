@@ -1,4 +1,4 @@
-package udp;
+package dev.lauta.httpfromtcp.udp;
 
 import java.io.IOException;
 import java.net.*;
@@ -6,7 +6,6 @@ import java.nio.charset.StandardCharsets;
 
 public class Client {
     private DatagramSocket datagramSocket;
-    private int port;
     private InetAddress address;
 
     public Client() {

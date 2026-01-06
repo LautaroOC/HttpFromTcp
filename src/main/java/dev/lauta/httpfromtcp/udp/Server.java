@@ -1,4 +1,4 @@
-package udp;
+package dev.lauta.httpfromtcp.udp;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
