@@ -90,7 +90,7 @@ public class RequestTest {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
             requestParser.checkRequest(raw);
         });
-        
+
        assertEquals("Empty request", ex.getMessage());
     }
 
