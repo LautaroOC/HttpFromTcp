@@ -11,4 +11,15 @@ public class RequestLine {
         this.Method = method;
     }
 
+    public String getHttpVersion() {
+        return HttpVersion;
+    }
+
+    public String getRequestTarget() {
+        return RequestTarget;
+    }
+
+    public String getMethod() {
+        return Method;
+    }
 }

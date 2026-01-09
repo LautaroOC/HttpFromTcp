@@ -17,6 +17,7 @@ public class RequestParser {
     private int bytesRead = 0;
     private int totalBytesRead = 0;
     private int bytesParsed = 0;
+    private byte lastByteOccurence;
 
     public RequestParser() {
         byteArrayOutputStream = new ByteArrayOutputStream();
@@ -27,6 +28,9 @@ public class RequestParser {
         while (!done) {
             try {
                 bytesRead = in.read(buffer);
+                if (bytesRead == -1) {
+                    done = true;
+                }
                 totalBytesRead += bytesRead;
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -94,10 +98,26 @@ public class RequestParser {
 
         int position = 0;
 
-        for (int i = 0; i < buff.length - 1; i++) {
-            if (buff[i] == '\r' && buff[i + 1] == '\n') {
-                position = i;
-                return position;
+        for (int i = 0; i < bytesRead -1; i++) {
+            if (i == 0) {
+                if (lastByteOccurence == '\r' && buff[i] == '\n') {
+                    position = i;
+                    lastByteOccurence = 0;
+                    return position;
+                }
+            }
+
+            if (i + 1 <= bytesRead) {
+                if (buff[i] == '\r' && buff[i + 1] == '\n') {
+                    position = i;
+                    return position;
+                }
+            }
+
+            if (i == bytesRead - 1) {
+                if (buff[i] == '\r')  {
+                    lastByteOccurence = buff[i];
+                }
             }
         }
         return position;

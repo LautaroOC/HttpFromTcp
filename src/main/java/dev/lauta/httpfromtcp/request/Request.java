@@ -8,8 +8,8 @@ public class Request {
         this.requestLine = requestLine;
     }
 
-
-    public String printRequest(String string) {
-        return string;
+    public RequestLine getRequestLine() {
+        return requestLine;
     }
+
 }
