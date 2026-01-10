@@ -1,11 +1,6 @@
-package dev.lauta.httpfromtcp.request;
-
-import java.io.ByteArrayInputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Random;
 
 public class TestingInputStream extends InputStream {
 

@@ -10,10 +10,8 @@ public class Main {
 
         File file = new File("src/messages.txt");
         BlockingQueue<String> blockingQueue = new LinkedBlockingDeque<>();
-        Server server = new Server(file, blockingQueue);
-        Consumer consumer = new Consumer(blockingQueue);
+        Server server = new Server();
         server.start();
-        consumer.start();
 
     }
 }
