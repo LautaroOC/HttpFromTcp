@@ -51,8 +51,6 @@ public class RequestTest {
     }
 
 
-
-
     @Test
     public void testGoodRequest() {
         //Arrange: Set up the necessary data and context.
@@ -73,11 +71,11 @@ public class RequestTest {
     }
 
 
-  //  @Test
-    //public void testGoodRequestWithPath() {
+    @Test
+    public void testGoodRequestWithPath() {
         //Arrange: Set up the necessary data and context.
-        //String raw = "GET /coffee HTTP/1.1\r\nHost: localhost:42069\r\nUser-Agent: curl/7.81.0\r\nAccept: */*\r\n\r\n";
-     /*   TestingInputStream testingInputStream = new TestingInputStream(raw);
+        String raw = "GET /coffee HTTP/1.1\r\nHost: localhost:42069\r\nUser-Agent: curl/7.81.0\r\nAccept: */*\r\n\r\n";
+        TestingInputStream testingInputStream = new TestingInputStream(raw);
         RequestParser requestParser = new RequestParser();
         Request request;
         RequestLine requestLine;
@@ -91,22 +89,6 @@ public class RequestTest {
         assertEquals("GET", requestLine.getMethod());
         assertEquals("/coffee", requestLine.getRequestTarget());
         assertEquals("HTTP/1.1", requestLine.getHttpVersion());
-    }
-
-    @Test
-    public void testValidSingleHeader() {
-        String raw = "Host: localhost:42069\r\n\r\n";
-        TestingInputStream testingInputStream = new TestingInputStream(raw);
-        RequestParser requestParser = new RequestParser();
-        Request request;
-        Header header;
-
-        request = requestParser.RequestFromReader(testingInputStream);
-        header = request.getHeader();
-
-        assertEquals("Host", header.findKey("Host"));
-        assertEquals("localhost:42069", header.findValue("localhost:42069"));
-
     }
 
     //BAD
@@ -130,9 +112,9 @@ public class RequestTest {
     public void testInvalidMethod() {
         //Arrange: Set up the necessary data and context.
 
-      */
-       // String raw = "/coffee GET HTTP/1.1\r\nHost: localhost:42069\r\nUser-Agent: curl/7.81.0\r\nAccept: */*\r\n\r\n";
-        /*TestingInputStream in = new TestingInputStream(raw);
+
+     String raw = "/coffee GET HTTP/1.1\r\nHost: localhost:42069\r\nUser-Agent: curl/7.81.0\r\nAccept: */*\r\n\r\n";
+        TestingInputStream in = new TestingInputStream(raw);
         RequestParser requestParser = new RequestParser();
 
         //Act: Invoke the method or function you want to test.
@@ -148,9 +130,8 @@ public class RequestTest {
     public void testInvalidVersion() {
         //Arrange: Set up the necessary data and context.
 
-         */
-       // String raw = "GET /coffee HTTP/2.1\r\nHost: localhost:42069\r\nUser-Agent: curl/7.81.0\r\nAccept: */*\r\n\r\n";
-        /*TestingInputStream in = new TestingInputStream(raw);
+     String raw = "GET /coffee HTTP/2.1\r\nHost: localhost:42069\r\nUser-Agent: curl/7.81.0\r\nAccept: */*\r\n\r\n";
+        TestingInputStream in = new TestingInputStream(raw);
         RequestParser requestParser = new RequestParser();
 
         //Act: Invoke the method or function you want to test.
@@ -174,5 +155,5 @@ public class RequestTest {
 
         assertEquals("Empty request", ex.getMessage());
     }
-         */
+
 }

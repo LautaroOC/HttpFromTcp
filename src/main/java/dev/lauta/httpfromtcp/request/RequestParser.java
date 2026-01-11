@@ -5,6 +5,7 @@ import dev.lauta.httpfromtcp.header.Header;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 public class RequestParser {
     private int bytesParsed = 0;
@@ -29,10 +30,12 @@ public class RequestParser {
         while (state != ParserState.DONE) {
             try {
                 bytesRead = in.read(buffer);
-                System.err.println("DEBUG: chunk received='" + new String(buffer, 0, bytesRead) + "'");
                 if (bytesRead == -1) {
+                    String line = byteArrayOutputStream.toString();
+                    processLine(line);
                     break;
                 }
+                System.err.println("DEBUG: chunk received='" + new String(buffer, 0, bytesRead) + "'");
                 totalBytesRead += bytesRead;
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -45,26 +48,27 @@ public class RequestParser {
     byte lastByte;
 
     public int parseRequest(byte[] buffer) {
+
+
+        System.err.println("DEBUG: bytesRead='" + bytesRead+ "'");
         if (state == ParserState.DONE) {
             return 0;
         }
-
         int start = 0;
 
         for (int i = 0; i < bytesRead; i++) {
+
             byte b = buffer[i];
 
-            // Si encontramos CRLF, procesamos la línea
             if (b == '\n' && lastByte == '\r') {
-                String line = byteArrayOutputStream.toString(); // incluso si vacío
+                String line = byteArrayOutputStream.toString();
                 System.err.println("DEBUG: processLine(line)='" + line + "'");
                 processLine(line);
                 byteArrayOutputStream.reset();
             } else if (b != '\r') {
-                // CR se ignora aquí porque lo usamos solo para detectar CRLF
                 byteArrayOutputStream.write(b);
+                System.err.println("DEBUG: processLine(line)='" + byteArrayOutputStream.toString() + " i = " + i);
             }
-
             lastByte = b;
         }
         return bytesParsed;
