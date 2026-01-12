@@ -5,6 +5,7 @@ import dev.lauta.httpfromtcp.request.RequestLine;
 import dev.lauta.httpfromtcp.request.RequestParser;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
@@ -12,8 +13,6 @@ import static org.junit.Assert.assertThrows;
 public class RequestTest {
 
     //GOOD
-
-
     @Test
     public void testForTheTestingClass01() {
         String raw = "GET / HTTP/1.1\r\n";
@@ -91,6 +90,40 @@ public class RequestTest {
         assertEquals("HTTP/1.1", requestLine.getHttpVersion());
     }
 
+    @Test
+    public void testHeaderSingle() {
+        String raw = "GET /coffee HTTP/1.1\r\nTest: value\r\nTest: value2\r\n\r\n";
+        TestingInputStream in = new TestingInputStream(raw);
+        RequestParser requestParser = new RequestParser();
+
+        Request request = requestParser.RequestFromReader(in);
+        Header header = request.getHeader();
+
+        ArrayList<String> tokens = header.get("test");
+        assertEquals(2, tokens.size());
+        assertEquals("value", tokens.get(0));
+        assertEquals("value2", tokens.get(1));
+    }
+
+    @Test
+    public void testHeaderGoodFormat() {
+        String raw = "GET / HTTP/1.1\r\nHost: localhost:42069\r\nUser-Agent: curl/7.81.0\r\nAccept: */*\r\n\r\n";
+        TestingInputStream in = new TestingInputStream(raw);
+        RequestParser requestParser = new RequestParser();
+
+        Request request = requestParser.RequestFromReader(in);
+        Header header = request.getHeader();
+
+        ArrayList<String> tokens = header.get("host");
+        assertEquals("localhost:42069", tokens.get(0));
+
+        tokens = header.get("user-agent");
+        assertEquals("curl/7.81.0", tokens.get(0));
+
+        tokens = header.get("accept");
+        assertEquals("*/*", tokens.get(0));
+    }
+
     //BAD
     @Test
     public void testInvalidParts() {
@@ -113,7 +146,7 @@ public class RequestTest {
         //Arrange: Set up the necessary data and context.
 
 
-     String raw = "/coffee GET HTTP/1.1\r\nHost: localhost:42069\r\nUser-Agent: curl/7.81.0\r\nAccept: */*\r\n\r\n";
+        String raw = "/coffee GET HTTP/1.1\r\nHost: localhost:42069\r\nUser-Agent: curl/7.81.0\r\nAccept: */*\r\n\r\n";
         TestingInputStream in = new TestingInputStream(raw);
         RequestParser requestParser = new RequestParser();
 
@@ -130,7 +163,7 @@ public class RequestTest {
     public void testInvalidVersion() {
         //Arrange: Set up the necessary data and context.
 
-     String raw = "GET /coffee HTTP/2.1\r\nHost: localhost:42069\r\nUser-Agent: curl/7.81.0\r\nAccept: */*\r\n\r\n";
+        String raw = "GET /coffee HTTP/2.1\r\nHost: localhost:42069\r\nUser-Agent: curl/7.81.0\r\nAccept: */*\r\n\r\n";
         TestingInputStream in = new TestingInputStream(raw);
         RequestParser requestParser = new RequestParser();
 
@@ -154,6 +187,33 @@ public class RequestTest {
         });
 
         assertEquals("Empty request", ex.getMessage());
+    }
+
+    @Test
+    public void testHeaderBadfieldname() {
+        String raw = "GET /coffee HTTP/1.1\r\nH©st: localhost:42069\r\n\r\n";
+        TestingInputStream in = new TestingInputStream(raw);
+        RequestParser requestParser = new RequestParser();
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+            requestParser.RequestFromReader(in);
+        });
+
+        assertEquals("Invalid character in fieldName", ex.getMessage());
+    }
+
+    @Test
+    public void testHeaderMalformed() {
+        String raw = "GET / HTTP/1.1\r\nHost localhost:42069\r\n\r\n";
+        TestingInputStream in = new TestingInputStream(raw);
+        RequestParser requestParser = new RequestParser();
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+            requestParser.RequestFromReader(in);
+        });
+
+        assertEquals("No spaces allowed in fieldname", ex.getMessage());
+
     }
 
 }

@@ -35,7 +35,6 @@ public class RequestParser {
                     processLine(line);
                     break;
                 }
-                System.err.println("DEBUG: chunk received='" + new String(buffer, 0, bytesRead) + "'");
                 totalBytesRead += bytesRead;
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -50,7 +49,6 @@ public class RequestParser {
     public int parseRequest(byte[] buffer) {
 
 
-        System.err.println("DEBUG: bytesRead='" + bytesRead+ "'");
         if (state == ParserState.DONE) {
             return 0;
         }
@@ -62,12 +60,10 @@ public class RequestParser {
 
             if (b == '\n' && lastByte == '\r') {
                 String line = byteArrayOutputStream.toString();
-                System.err.println("DEBUG: processLine(line)='" + line + "'");
                 processLine(line);
                 byteArrayOutputStream.reset();
             } else if (b != '\r') {
                 byteArrayOutputStream.write(b);
-                System.err.println("DEBUG: processLine(line)='" + byteArrayOutputStream.toString() + " i = " + i);
             }
             lastByte = b;
         }
