@@ -35,6 +35,7 @@ public class RequestLine {
         String requestTarget;
         String httpVersion;
 
+
         if (request.isEmpty()) {
             throw new IllegalArgumentException("Empty request");
         }

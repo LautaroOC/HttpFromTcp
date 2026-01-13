@@ -1,4 +1,5 @@
 package dev.lauta.httpfromtcp.tcp;
+import dev.lauta.httpfromtcp.body.Body;
 import dev.lauta.httpfromtcp.header.Header;
 import dev.lauta.httpfromtcp.request.Request;
 import dev.lauta.httpfromtcp.request.RequestParser;
@@ -46,15 +47,19 @@ public class Server extends Thread{
                     RequestParser requestParser = new RequestParser();
                     Request request = requestParser.RequestFromReader(in);
                     Header header = request.getHeader();
+                    Body body = request.getBody();
 
                     System.out.println("Request line:");
                     System.out.println("- Method: " + request.getRequestLine().getMethod());
                     System.out.println("- Target: " + request.getRequestLine().getRequestTarget());
                     System.out.println("- Version: " + request.getRequestLine().getHttpVersion());
-                    System.out.println("- HEADERS:");
+                    System.out.println("- Headers:");
                     for (String i : header.keySet()) {
                         System.out.println("- " + i.toUpperCase() + ": " + header.get(i));
                     }
+                    System.out.println("- Body:");
+                    String bodyLine = new String(body.getContent());
+                    System.out.println("- Body String: " + bodyLine);
 
 
                 } catch (IOException e) {

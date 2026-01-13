@@ -1,3 +1,4 @@
+import dev.lauta.httpfromtcp.body.Body;
 import dev.lauta.httpfromtcp.header.Header;
 import org.junit.Test;
 import dev.lauta.httpfromtcp.request.Request;
@@ -7,8 +8,7 @@ import dev.lauta.httpfromtcp.request.RequestParser;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.*;
 
 public class RequestTest {
 
@@ -124,6 +124,34 @@ public class RequestTest {
         assertEquals("*/*", tokens.get(0));
     }
 
+    @Test
+    public void testStandardBody() {
+        String raw = "GET /submit HTTP/1.1\r\n" + "Host: localhost:42069\r\n" + "Content-Length: 13\r\n" + "\r\n" + "hello world!\n";
+        TestingInputStream in = new TestingInputStream(raw);
+        RequestParser requestParser = new RequestParser();
+        Request request = requestParser.RequestFromReader(in);
+        Header header = request.getHeader();
+
+        Body body = request.getBody();
+        String bodyString = new String(body.getContent());
+
+        assertEquals("hello world!\n", bodyString);
+    }
+
+    @Test
+    public void testNoBodySent() {
+        String raw = "GET /submit HTTP/1.1\r\n" + "Host: localhost:42069\r\n"+ "\r\n";
+        TestingInputStream in = new TestingInputStream(raw);
+        RequestParser requestParser = new RequestParser();
+        Request request = requestParser.RequestFromReader(in);
+        Header header = request.getHeader();
+
+        Body body = request.getBody();
+
+        assertNull(body);
+
+    }
+
     //BAD
     @Test
     public void testInvalidParts() {
@@ -214,6 +242,32 @@ public class RequestTest {
 
         assertEquals("No spaces allowed in fieldname", ex.getMessage());
 
+    }
+
+    @Test
+    public void testBodyIncomplete() {
+        String raw = "GET /submit HTTP/1.1\r\n" + "Host: localhost:42069\r\n" + "Content-Length: 20\r\n" + "\r\n" + "partial content";
+        TestingInputStream in = new TestingInputStream(raw);
+        RequestParser requestParser = new RequestParser();
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+            requestParser.RequestFromReader(in);
+        });
+
+        assertEquals("Incomplete body", ex.getMessage());
+    }
+
+    @Test
+    public void testBodyEmpty() {
+        String raw = "GET /submit HTTP/1.1\r\n" + "Host: localhost:42069\r\n" + "Content-Length: 20\r\n" + "\r\n";
+        TestingInputStream in = new TestingInputStream(raw);
+        RequestParser requestParser = new RequestParser();
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+            requestParser.RequestFromReader(in);
+        });
+
+        assertEquals("Empty body", ex.getMessage());
     }
 
 }
