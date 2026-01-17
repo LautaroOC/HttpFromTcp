@@ -1,26 +1,27 @@
 package dev.lauta.httpfromtcp.server;
 
 import dev.lauta.httpfromtcp.header.Header;
+import dev.lauta.httpfromtcp.httpserver.Handler;
+import dev.lauta.httpfromtcp.httpserver.HandlerResult;
+import dev.lauta.httpfromtcp.request.Request;
+import dev.lauta.httpfromtcp.request.RequestParser;
 import dev.lauta.httpfromtcp.response.Response;
 import dev.lauta.httpfromtcp.response.StatusCode;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-
 import java.nio.charset.StandardCharsets;
 
 public class Server extends Thread {
 
-    private int port = 42069;
+    Handler handler;
     ServerSocket serverSocket;
     private Boolean running = false;
     private StatusCode statusCode;
 
-    public Server() {
+    public Server(int port, Handler handler) {
+        this.handler = handler;
         try {
             serverSocket = new ServerSocket(port);
         } catch (IOException e) {
@@ -42,9 +43,7 @@ public class Server extends Thread {
     public void acceptConnection() throws IOException {
         try {
             Socket clientSocket = serverSocket.accept();
-            statusCode = StatusCode.OK;
-            handler(clientSocket);
-
+            handle(clientSocket);
         } catch (IOException e) {
             if (running) {
                 throw new RuntimeException(e);
@@ -52,19 +51,23 @@ public class Server extends Thread {
         }
     }
 
-    public void handler(Socket clientSocket) {
-        try {
-            Writer w = new OutputStreamWriter(
-                    clientSocket.getOutputStream(),
-                    StandardCharsets.UTF_8
-            );
-            Response.writeStatusLine(w, statusCode);
-            Header header = Response.getDefaultHeaders(0);
-            Response.writeHeaders(w, header);
-            w.flush();
-            clientSocket.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    public void handle(Socket clientSocket) throws IOException {
+        InputStream in = clientSocket.getInputStream();
+        RequestParser requestParser = new RequestParser();
+        Request request = requestParser.RequestFromReader(in);
+
+        HandlerResult handlerResult = handler.handle(request);
+
+        Writer w = new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8);
+        Response.writeStatusLine(w, handlerResult.getStatusCode());
+
+        byte[] bodyBytes = handlerResult.getBody().getBytes(StandardCharsets.UTF_8);
+        Header header = Response.getDefaultHeaders(bodyBytes.length);
+        Response.writeHeaders(w, header);
+
+        w.write(handlerResult.getBody());
+        w.flush();
+        clientSocket.close();
     }
+
 }

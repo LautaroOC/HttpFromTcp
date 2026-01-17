@@ -114,6 +114,9 @@ public class RequestParser {
             if (line.isEmpty()) {
                 state = ParserState.BODY_LINE;
                 foundHeaderCRLF = true;
+                if (!header.containsKey("content-length")) {
+                    state = ParserState.DONE;
+                }
             } else {
                 header.parse(line);
             }
