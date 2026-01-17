@@ -22,5 +22,9 @@ public class Body {
         return content;
     }
 
+    public int getLength() {
+        return content.length;
+    }
+
 
 }

@@ -1,7 +1,8 @@
 package dev.lauta.httpfromtcp.httpserver;
 
 import dev.lauta.httpfromtcp.request.Request;
+import dev.lauta.httpfromtcp.response.ResponseWriter;
 
 public interface Handler {
-    HandlerResult handle(Request request);
+    void handle(ResponseWriter rw, Request request);
 }

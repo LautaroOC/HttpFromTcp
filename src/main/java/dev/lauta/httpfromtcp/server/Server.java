@@ -5,7 +5,7 @@ import dev.lauta.httpfromtcp.httpserver.Handler;
 import dev.lauta.httpfromtcp.httpserver.HandlerResult;
 import dev.lauta.httpfromtcp.request.Request;
 import dev.lauta.httpfromtcp.request.RequestParser;
-import dev.lauta.httpfromtcp.response.Response;
+import dev.lauta.httpfromtcp.response.ResponseWriter;
 import dev.lauta.httpfromtcp.response.StatusCode;
 
 import java.io.*;
@@ -56,17 +56,11 @@ public class Server extends Thread {
         RequestParser requestParser = new RequestParser();
         Request request = requestParser.RequestFromReader(in);
 
-        HandlerResult handlerResult = handler.handle(request);
+        ResponseWriter responseWriter = new ResponseWriter(clientSocket.getOutputStream());
+        handler.handle(responseWriter, request);
+        //responseWriter.writeResponse();
 
-        Writer w = new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8);
-        Response.writeStatusLine(w, handlerResult.getStatusCode());
-
-        byte[] bodyBytes = handlerResult.getBody().getBytes(StandardCharsets.UTF_8);
-        Header header = Response.getDefaultHeaders(bodyBytes.length);
-        Response.writeHeaders(w, header);
-
-        w.write(handlerResult.getBody());
-        w.flush();
+        responseWriter.flush();
         clientSocket.close();
     }
 

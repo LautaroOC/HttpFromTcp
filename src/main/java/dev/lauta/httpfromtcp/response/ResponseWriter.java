@@ -1,35 +1,47 @@
 package dev.lauta.httpfromtcp.response;
 
 import dev.lauta.httpfromtcp.header.Header;
+import jdk.jfr.internal.util.Output;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Map;
 
 
-public class Response {
+public class ResponseWriter {
+    private Writer writer;
+    private OutputStream outputStream;
 
-    public Response() {
-
+    public ResponseWriter(OutputStream out) {
+        this.writer = new OutputStreamWriter(out, StandardCharsets.UTF_8);
+        this.outputStream = out;
     }
 
-    public static void writeStatusLine(Writer w, StatusCode statusCode) throws IOException {
+    public void flush() throws IOException{
+        writer.flush();
+        outputStream.flush();
+    }
+
+    public void writeStatusLine(StatusCode statusCode) throws IOException {
         if (statusCode == StatusCode.OK) {
-            w.write("HTTP/1.1 200 OK\r\n");
+            writer.write("HTTP/1.1 200 OK\r\n");
         }
         else if (statusCode == StatusCode.BAD_REQUEST) {
-            w.write("HTTP/1.1 400 Bad Request\r\n");
+            writer.write("HTTP/1.1 400 Bad Request\r\n");
         }
         else if (statusCode == StatusCode.INTERNAL_SERVER_ERROR) {
-            w.write("HTTP/1.1 500 Internal Server Error\r\n");
+            writer.write("HTTP/1.1 500 Internal Server Error\r\n");
         }
         else {
             throw new IllegalArgumentException("Unsupported status code\r\n");
         }
     }
 
-    public static Header getDefaultHeaders(int contentLen) {
+    public Header getDefaultHeaders(int contentLen) {
         Header header = new Header();
         ArrayList<String> contentLengthValue = new ArrayList<>();
         contentLengthValue.add(String.valueOf(contentLen));
@@ -37,19 +49,12 @@ public class Response {
         ArrayList<String> connectionValue = new ArrayList<>();
         connectionValue.add("close");
         header.put("Connection", connectionValue);
-        ArrayList<String> contentTypeValue = new ArrayList<>();
-        contentTypeValue.add("text/plain");
-        header.put("Content-Type", contentTypeValue);
+
         return header;
     }
 
-    public static void writeHeaders(Writer w, Header header) throws IOException {
-        for (Map.Entry<String, ArrayList<String>> entry : header.entrySet()) {
-            for (String value : entry.getValue()) {
-                w.write(entry.getKey() + ": " + value + "\r\n");
-            }
-        }
-        w.write("\r\n");
+    public void writeBody(byte[] body) throws IOException{
+        outputStream.write(body);
     }
 
 }
