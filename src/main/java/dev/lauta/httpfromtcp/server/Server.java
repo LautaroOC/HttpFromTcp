@@ -58,7 +58,7 @@ public class Server extends Thread {
 
         ResponseWriter responseWriter = new ResponseWriter(clientSocket.getOutputStream());
         handler.handle(responseWriter, request);
-        //responseWriter.writeResponse();
+        responseWriter.writeResponse();
 
         responseWriter.flush();
         clientSocket.close();

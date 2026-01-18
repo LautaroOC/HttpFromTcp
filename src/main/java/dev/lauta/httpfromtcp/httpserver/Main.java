@@ -59,9 +59,10 @@ public class Main {
                         html = html200;
                     }
 
-                    rw.writeStatusLine(statusCode);
-                    rw.writeBody(html.getBytes(StandardCharsets.UTF_8));
-                    rw.getDefaultHeaders(request.getBody().getLength());
+                    rw.setStatusLine(statusCode);
+                    rw.setHeader("Content-Type", "text/html");
+                    rw.setDefaultHeaders(html.getBytes(StandardCharsets.UTF_8).length);
+                    rw.setBody(html.getBytes(StandardCharsets.UTF_8));
 
                 } catch (IOException e) {
                     throw new IllegalArgumentException(e);
