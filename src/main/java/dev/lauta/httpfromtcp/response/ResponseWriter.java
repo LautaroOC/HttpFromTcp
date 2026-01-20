@@ -24,22 +24,19 @@ public class ResponseWriter {
         this.header = new Header();
     }
 
-    public void flush() throws IOException{
+    public void flush() throws IOException {
         outputStream.flush();
     }
 
     public void setStatusLine(StatusCode statusCode) throws IOException {
-        if (writeStatus == WriteStatus.STATUSLINE){
+        if (writeStatus == WriteStatus.STATUSLINE) {
             if (statusCode == StatusCode.OK) {
                 statusLine = "HTTP/1.1 200 OK\r\n";
-            }
-            else if (statusCode == StatusCode.BAD_REQUEST) {
+            } else if (statusCode == StatusCode.BAD_REQUEST) {
                 statusLine = "HTTP/1.1 400 Bad Request\r\n";
-            }
-            else if (statusCode == StatusCode.INTERNAL_SERVER_ERROR) {
+            } else if (statusCode == StatusCode.INTERNAL_SERVER_ERROR) {
                 statusLine = "HTTP/1.1 500 Internal Server Error\r\n";
-            }
-            else {
+            } else {
                 throw new IllegalArgumentException("Unsupported status code\r\n");
             }
             writeStatus = WriteStatus.HEADERS;
@@ -48,9 +45,9 @@ public class ResponseWriter {
 
     public void setDefaultHeaders(int contentLen) {
         if (writeStatus == WriteStatus.HEADERS) {
-            ArrayList<String> contentLengthValue = new ArrayList<>();
-            contentLengthValue.add(String.valueOf(contentLen));
-            header.put("Content-Length", contentLengthValue);
+            //ArrayList<String> contentLengthValue = new ArrayList<>();
+            //contentLengthValue.add(String.valueOf(contentLen));
+            //header.put("Content-Length", contentLengthValue);
             ArrayList<String> connectionValue = new ArrayList<>();
             connectionValue.add("close");
             header.put("Connection", connectionValue);
@@ -59,14 +56,14 @@ public class ResponseWriter {
         }
     }
 
-    public void setBody(byte[] body) throws IOException{
+    public void setBody(byte[] body) throws IOException {
         if (writeStatus == WriteStatus.BODY) {
             this.body = body;
             writeStatus = WriteStatus.WRITE;
         }
     }
 
-    public void writeHeaders() throws IOException{
+    public void writeHeaders() throws IOException {
         for (Map.Entry<String, ArrayList<String>> entry : header.entrySet()) {
             for (String value : entry.getValue()) {
                 String line = (entry.getKey() + ": " + value + "\r\n");
@@ -87,7 +84,25 @@ public class ResponseWriter {
     public void setHeader(String name, String value) {
         ArrayList<String> values = new ArrayList<>();
         values.add(value);
-        header.put(name,values);
+        header.put(name, values);
     }
+
+    public void WriteChunkedBody(byte[] p) throws IOException{
+        int pLength = p.length;
+        String sizeHex = Integer.toHexString(pLength);
+        String line = sizeHex + "\r\n";
+        outputStream.write(line.getBytes(StandardCharsets.US_ASCII));
+
+        outputStream.write(p);
+        outputStream.write(("\r\n").getBytes(StandardCharsets.US_ASCII));
+    }
+
+    public void WriteChunkedBodyDone() throws IOException{
+        String line ="0\r\n";
+        outputStream.write(line.getBytes(StandardCharsets.US_ASCII));
+        outputStream.write(("\r\n").getBytes(StandardCharsets.US_ASCII));
+        outputStream.flush();
+    }
+
 
 }

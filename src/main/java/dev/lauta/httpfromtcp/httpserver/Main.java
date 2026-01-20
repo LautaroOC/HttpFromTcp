@@ -1,14 +1,13 @@
 package dev.lauta.httpfromtcp.httpserver;
 
 import dev.lauta.httpfromtcp.request.Request;
-import dev.lauta.httpfromtcp.request.RequestLine;
 import dev.lauta.httpfromtcp.response.ResponseWriter;
 import dev.lauta.httpfromtcp.response.StatusCode;
 import dev.lauta.httpfromtcp.server.Server;
-import dev.lauta.httpfromtcp.httpserver.Handler;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 
 public class Main {
@@ -61,16 +60,37 @@ public class Main {
 
                     rw.setStatusLine(statusCode);
                     rw.setHeader("Content-Type", "text/html");
+                    rw.setHeader("Transfer-Encoding", "chunked");
                     rw.setDefaultHeaders(html.getBytes(StandardCharsets.UTF_8).length);
                     rw.setBody(html.getBytes(StandardCharsets.UTF_8));
+                    rw.flush();
+                    int splitIndex = 3;
+                    int startIndex = 0;
+                    byte[] htmlResponse = html.getBytes(StandardCharsets.UTF_8);
+                    for (int i = 0; i < htmlResponse.length; i++) {
+                        if (splitIndex < htmlResponse.length) {
+
+                            byte[] part = Arrays.copyOfRange(htmlResponse, startIndex, splitIndex);
+                                startIndex += 3;
+                                splitIndex += 3;
+                                for (int k = 0; k < htmlResponse.length; k++) {
+                                    if (splitIndex > htmlResponse.length) {
+                                        splitIndex--;
+                                    }
+                                }
+
+                            rw.WriteChunkedBody(part);
+                        }
+                    }
+                    rw.WriteChunkedBodyDone();
 
                 } catch (IOException e) {
                     throw new IllegalArgumentException(e);
                 }
             }
         };
-    Server server = new Server(42069, handler);
-    server.start();
+        Server server = new Server(42069, handler);
+        server.start();
     }
 
 }
