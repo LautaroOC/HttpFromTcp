@@ -52,7 +52,7 @@ public class ResponseWriter {
             connectionValue.add("close");
             header.put("Connection", connectionValue);
 
-            writeStatus = WriteStatus.BODY;
+            //writeStatus = WriteStatus.BODY;
         }
     }
 
@@ -87,7 +87,7 @@ public class ResponseWriter {
         header.put(name, values);
     }
 
-    public void WriteChunkedBody(byte[] p) throws IOException{
+    public void writeChunkedBody(byte[] p) throws IOException {
         int pLength = p.length;
         String sizeHex = Integer.toHexString(pLength);
         String line = sizeHex + "\r\n";
@@ -97,12 +97,26 @@ public class ResponseWriter {
         outputStream.write(("\r\n").getBytes(StandardCharsets.US_ASCII));
     }
 
-    public void WriteChunkedBodyDone() throws IOException{
-        String line ="0\r\n";
+    public void writeChunkedBodyDone() throws IOException {
+        String line = "0\r\n";
         outputStream.write(line.getBytes(StandardCharsets.US_ASCII));
-        outputStream.write(("\r\n").getBytes(StandardCharsets.US_ASCII));
         outputStream.flush();
+        writeStatus = WriteStatus.TRAILER;
     }
 
+    public void writeStatusLineAndHeaders() throws IOException {
+        outputStream.write(statusLine.getBytes(StandardCharsets.US_ASCII));
+        writeHeaders();
+    }
+
+    public void writeTrailers(Header trailer) throws IOException {
+        for (Map.Entry<String, ArrayList<String>> entry : trailer.entrySet()) {
+            for (String value : entry.getValue()) {
+                String line = (entry.getKey() + ": " + value + "\r\n");
+                outputStream.write(line.getBytes(StandardCharsets.UTF_8));
+            }
+        }
+        outputStream.write("\r\n".getBytes(StandardCharsets.UTF_8));
+    }
 
 }

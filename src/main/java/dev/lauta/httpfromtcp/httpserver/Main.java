@@ -1,5 +1,6 @@
 package dev.lauta.httpfromtcp.httpserver;
 
+import dev.lauta.httpfromtcp.header.Header;
 import dev.lauta.httpfromtcp.request.Request;
 import dev.lauta.httpfromtcp.response.ResponseWriter;
 import dev.lauta.httpfromtcp.response.StatusCode;
@@ -7,6 +8,9 @@ import dev.lauta.httpfromtcp.server.Server;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 
@@ -61,31 +65,42 @@ public class Main {
                     rw.setStatusLine(statusCode);
                     rw.setHeader("Content-Type", "text/html");
                     rw.setHeader("Transfer-Encoding", "chunked");
+                    rw.setHeader("Trailer", "X-Content-SHA256, X-Content-Length");
                     rw.setDefaultHeaders(html.getBytes(StandardCharsets.UTF_8).length);
-                    rw.setBody(html.getBytes(StandardCharsets.UTF_8));
+                    //rw.setBody(html.getBytes(StandardCharsets.UTF_8));
+                    rw.writeStatusLineAndHeaders();
                     rw.flush();
-                    int splitIndex = 3;
+                    int chunked = 3;
                     int startIndex = 0;
                     byte[] htmlResponse = html.getBytes(StandardCharsets.UTF_8);
-                    for (int i = 0; i < htmlResponse.length; i++) {
-                        if (splitIndex < htmlResponse.length) {
+                    int length = 0;
+                    MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                    while (startIndex < htmlResponse.length) {
 
-                            byte[] part = Arrays.copyOfRange(htmlResponse, startIndex, splitIndex);
-                                startIndex += 3;
-                                splitIndex += 3;
-                                for (int k = 0; k < htmlResponse.length; k++) {
-                                    if (splitIndex > htmlResponse.length) {
-                                        splitIndex--;
-                                    }
-                                }
+                        int end = Math.min(startIndex + chunked, htmlResponse.length);
+                        byte[] part = Arrays.copyOfRange(htmlResponse, startIndex, end);
+                        startIndex = end;
 
-                            rw.WriteChunkedBody(part);
-                        }
+                        rw.writeChunkedBody(part);
+                        digest.update(part);
+                        length += part.length;
                     }
-                    rw.WriteChunkedBodyDone();
+                    byte[] hash = digest.digest();
+                    rw.writeChunkedBodyDone();
+                    Header trailers = new Header();
+                    ArrayList<String> hashArray = new ArrayList<>();
+                    hashArray.add(toHex(hash));
+                    trailers.put("X-Content-SHA256", hashArray);
+                    ArrayList<String> xContentLength = new ArrayList<>();
+                    xContentLength.add(Integer.toString(length));
+                    trailers.put("X-Content-Length", xContentLength);
+
+                    rw.writeTrailers(trailers);
 
                 } catch (IOException e) {
                     throw new IllegalArgumentException(e);
+                } catch (NoSuchAlgorithmException e) {
+                    throw new RuntimeException(e);
                 }
             }
         };
@@ -93,5 +108,14 @@ public class Main {
         server.start();
     }
 
+    private static String toHex(byte[] bytes) {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (byte b : bytes) {
+            stringBuilder.append(String.format("%02x", b));
+        }
+        return stringBuilder.toString();
+    }
+
 }
+
 

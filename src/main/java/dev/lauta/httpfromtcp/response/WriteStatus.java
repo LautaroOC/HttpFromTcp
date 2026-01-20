@@ -4,5 +4,6 @@ public enum WriteStatus {
     STATUSLINE,
     HEADERS,
     BODY,
+    TRAILER,
     WRITE
 }
