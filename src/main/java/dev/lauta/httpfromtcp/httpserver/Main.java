@@ -8,6 +8,8 @@ import dev.lauta.httpfromtcp.server.Server;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -63,7 +65,12 @@ public class Main {
                     }
 
                     rw.setStatusLine(statusCode);
-                    rw.setHeader("Content-Type", "text/html");
+                    if (target.equals("/video")) {
+                        rw.setHeader("Content-Type", "video/mp4");
+                    }
+                    else {
+                        rw.setHeader("Content-Type", "text/plain");
+                    }
                     rw.setHeader("Transfer-Encoding", "chunked");
                     rw.setHeader("Trailer", "X-Content-SHA256, X-Content-Length");
                     rw.setDefaultHeaders(html.getBytes(StandardCharsets.UTF_8).length);
@@ -75,16 +82,32 @@ public class Main {
                     byte[] htmlResponse = html.getBytes(StandardCharsets.UTF_8);
                     int length = 0;
                     MessageDigest digest = MessageDigest.getInstance("SHA-256");
-                    while (startIndex < htmlResponse.length) {
+                    if (target.equals("/video")) {
+                        byte[] videoBytes = Files.readAllBytes(Paths.get("assets/vim.mp4"));
+                        while (startIndex < videoBytes.length) {
 
-                        int end = Math.min(startIndex + chunked, htmlResponse.length);
-                        byte[] part = Arrays.copyOfRange(htmlResponse, startIndex, end);
-                        startIndex = end;
+                            int end = Math.min(startIndex + chunked, videoBytes.length);
+                            byte[] part = Arrays.copyOfRange(videoBytes, startIndex, end);
+                            startIndex = end;
 
-                        rw.writeChunkedBody(part);
-                        digest.update(part);
-                        length += part.length;
+                            rw.writeChunkedBody(part);
+                            digest.update(part);
+                            length += part.length;
+                        }
                     }
+                    else {
+                        while (startIndex < htmlResponse.length) {
+
+                            int end = Math.min(startIndex + chunked, htmlResponse.length);
+                            byte[] part = Arrays.copyOfRange(htmlResponse, startIndex, end);
+                            startIndex = end;
+
+                            rw.writeChunkedBody(part);
+                            digest.update(part);
+                            length += part.length;
+                        }
+                    }
+
                     byte[] hash = digest.digest();
                     rw.writeChunkedBodyDone();
                     Header trailers = new Header();
